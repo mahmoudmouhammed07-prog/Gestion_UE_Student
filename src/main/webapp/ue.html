@@ -3,14 +3,11 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Gestion des Modules</title>
+    <title>Gestion des Unités d'Enseignement</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
-    <!-- Même CSS que ue.html – vous pouvez aussi le mettre dans un fichier styles.css commun -->
     <style>
-        /* Copiez/collez exactement le même <style> que dans ue.html ici */
-        /* Pour éviter la duplication en production, mettez-le dans un fichier styles.css séparé */
         :root {
             --primary: #2c7be5;
             --primary-dark: #1e5bb8;
@@ -37,7 +34,10 @@
 
         .container { max-width: 1100px; margin: 0 auto; }
 
-        h1, h2 { color: #1a202c; margin-bottom: 1.2rem; }
+        h1, h2 {
+            color: #1a202c;
+            margin-bottom: 1.2rem;
+        }
 
         .card {
             background: white;
@@ -61,7 +61,10 @@
 
         .form-grid.full-width { grid-template-columns: 1fr; }
 
-        .form-group { display: flex; flex-direction: column; }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
 
         label {
             font-weight: 600;
@@ -160,65 +163,63 @@
 
 <div class="container">
 
-    <h1><i class="fas fa-cubes"></i> Gestion des Modules</h1>
+    <h1><i class="fas fa-graduation-cap"></i> Gestion des Unités d'Enseignement</h1>
 
     <div class="card">
-        <h2>Ajouter un Module</h2>
+        <h2>Ajouter une UE</h2>
 
         <div class="form-grid">
             <div class="form-group">
-                <label for="matricule">Matricule</label>
-                <input type="text" id="matricule" placeholder="ex: MOD-POO-2025" required>
+                <label for="code">Code UE</label>
+                <input type="text" id="code" placeholder="ex: UE-M1-INFO-01" required>
             </div>
 
             <div class="form-group">
-                <label for="nom">Nom du module</label>
-                <input type="text" id="nom" placeholder="ex: Programmation Orientée Objet" required>
+                <label for="domaine">Domaine</label>
+                <input type="text" id="domaine" placeholder="ex: Technologies de l'Information" required>
             </div>
 
             <div class="form-group">
-                <label for="coefficient">Coefficient</label>
-                <input type="number" id="coefficient" min="1" max="10" placeholder="3" required>
+                <label for="responsable">Responsable</label>
+                <input type="text" id="responsable" placeholder="Dr. Mohamed Ali" required>
             </div>
 
             <div class="form-group">
-                <label for="volume">Volume Horaire (heures)</label>
-                <input type="number" id="volume" min="10" placeholder="48" required>
+                <label for="credits">Crédits (ECTS)</label>
+                <input type="number" id="credits" min="1" max="30" placeholder="6" required>
             </div>
 
-            <div class="form-group">
-                <label for="type">Type</label>
-                <select id="type" required>
-                    <option value="PROFESSIONNEL">Professionnel</option>
-                    <option value="TRANSVERSAL">Transversal</option>
-                    <option value="RECHERCHE">Recherche</option>
+            <div class="form-group full-width">
+                <label for="semestre">Semestre</label>
+                <select id="semestre" required>
+                    <option value="">— Sélectionner —</option>
+                    <option value="S1">Semestre 1</option>
+                    <option value="S2">Semestre 2</option>
+                    <option value="S3">Semestre 3</option>
+                    <option value="S4">Semestre 4</option>
+                    <option value="S5">Semestre 5</option>
+                    <option value="S6">Semestre 6</option>
                 </select>
-            </div>
-
-            <div class="form-group">
-                <label for="codeUE">Code UE associée</label>
-                <input type="text" id="codeUE" placeholder="ex: UE-M1-INFO-01" required>
             </div>
         </div>
 
-        <button class="btn btn-primary" id="btnAddModule">
-            <i class="fas fa-plus"></i> Ajouter Module
+        <button class="btn btn-primary" id="btnAddUE">
+            <i class="fas fa-plus"></i> Ajouter UE
         </button>
 
-        <div class="error-message" id="moduleError"></div>
+        <div class="error-message" id="ueError"></div>
     </div>
 
     <div class="card">
-        <h2>Liste des Modules</h2>
-        <table id="moduleTable">
+        <h2>Liste des Unités d'Enseignement</h2>
+        <table id="ueTable">
             <thead>
             <tr>
-                <th>Matricule</th>
-                <th>Nom</th>
-                <th>Coeff.</th>
-                <th>Volume (h)</th>
-                <th>Type</th>
-                <th>UE</th>
+                <th>Code</th>
+                <th>Domaine</th>
+                <th>Responsable</th>
+                <th>Crédits</th>
+                <th>Semestre</th>
             </tr>
             </thead>
             <tbody></tbody>
@@ -248,25 +249,21 @@
         btn.classList.toggle("btn-loading", loading);
     }
 
-    async function loadModules() {
+    async function loadUEs() {
         try {
-            const xml = await fetchXML(`${API_BASE}/module/all`);
-            const modules = xml.getElementsByTagName("module");
-            const tbody = document.querySelector("#moduleTable tbody");
+            const xml = await fetchXML(`${API_BASE}/UE/all`);
+            const unites = xml.getElementsByTagName("uniteEnseignement");
+            const tbody = document.querySelector("#ueTable tbody");
             tbody.innerHTML = "";
 
-            Array.from(modules).forEach(mod => {
-                const ueElem = mod.getElementsByTagName("uniteEnseignement")[0];
-                const codeUE = ueElem?.getElementsByTagName("code")[0]?.textContent || "-";
-
+            Array.from(unites).forEach(ue => {
                 const row = document.createElement("tr");
                 row.innerHTML = `
-                <td>${mod.getElementsByTagName("matricule")[0]?.textContent || "-"}</td>
-                <td>${mod.getElementsByTagName("nom")[0]?.textContent || "-"}</td>
-                <td>${mod.getElementsByTagName("coefficient")[0]?.textContent || "-"}</td>
-                <td>${mod.getElementsByTagName("volumeHoraire")[0]?.textContent || "-"}</td>
-                <td>${mod.getElementsByTagName("type")[0]?.textContent || "-"}</td>
-                <td>${codeUE}</td>
+                <td>${ue.getElementsByTagName("code")[0]?.textContent || "-"}</td>
+                <td>${ue.getElementsByTagName("domaine")[0]?.textContent || "-"}</td>
+                <td>${ue.getElementsByTagName("responsable")[0]?.textContent || "-"}</td>
+                <td>${ue.getElementsByTagName("credits")[0]?.textContent || "-"}</td>
+                <td>${ue.getElementsByTagName("semestre")[0]?.textContent || "-"}</td>
             `;
                 tbody.appendChild(row);
             });
@@ -275,19 +272,18 @@
         }
     }
 
-    async function addModule() {
-        const btn = document.getElementById("btnAddModule");
+    async function addUE() {
+        const btn = document.getElementById("btnAddUE");
         setLoading(btn, true);
-        showError("moduleError", "");
+        showError("ueError", "");
 
         try {
             const fields = {
-                matricule:   document.getElementById("matricule").value.trim(),
-                nom:         document.getElementById("nom").value.trim(),
-                coefficient: document.getElementById("coefficient").value,
-                volume:      document.getElementById("volume").value,
-                type:        document.getElementById("type").value,
-                codeUE:      document.getElementById("codeUE").value.trim()
+                code:        document.getElementById("code").value.trim(),
+                domaine:     document.getElementById("domaine").value.trim(),
+                responsable: document.getElementById("responsable").value.trim(),
+                credits:     document.getElementById("credits").value,
+                semestre:    document.getElementById("semestre").value
             };
 
             if (Object.values(fields).some(v => !v)) {
@@ -295,16 +291,15 @@
             }
 
             const xml = `
-            <module>
-                <matricule>${fields.matricule}</matricule>
-                <nom>${fields.nom}</nom>
-                <coefficient>${fields.coefficient}</coefficient>
-                <volumeHoraire>${fields.volume}</volumeHoraire>
-                <type>${fields.type}</type>
-                <uniteEnseignement><code>${fields.codeUE}</code></uniteEnseignement>
-            </module>`;
+            <uniteEnseignement>
+                <code>${fields.code}</code>
+                <domaine>${fields.domaine}</domaine>
+                <responsable>${fields.responsable}</responsable>
+                <credits>${fields.credits}</credits>
+                <semestre>${fields.semestre}</semestre>
+            </uniteEnseignement>`;
 
-            const res = await fetch(`${API_BASE}/module/create`, {
+            const res = await fetch(`${API_BASE}/UE/create`, {
                 method: "POST",
                 headers: { "Content-Type": "application/xml" },
                 body: xml
@@ -313,22 +308,22 @@
             if (!res.ok) throw new Error("Échec de l'ajout (vérifiez le serveur)");
 
             // Reset + refresh
-            document.getElementById("matricule").value = "";
-            document.getElementById("nom").value = "";
-            document.getElementById("coefficient").value = "";
-            document.getElementById("volume").value = "";
-            document.getElementById("codeUE").value = "";
+            document.getElementById("code").value = "";
+            document.getElementById("domaine").value = "";
+            document.getElementById("responsable").value = "";
+            document.getElementById("credits").value = "";
+            document.getElementById("semestre").value = "";
 
-            await loadModules();
+            await loadUEs();
         } catch (err) {
-            showError("moduleError", err.message);
+            showError("ueError", err.message);
         } finally {
             setLoading(btn, false);
         }
     }
 
-    document.getElementById("btnAddModule").onclick = addModule;
-    window.addEventListener("load", loadModules);
+    document.getElementById("btnAddUE").onclick = addUE;
+    window.addEventListener("load", loadUEs);
 </script>
 </body>
 </html>
