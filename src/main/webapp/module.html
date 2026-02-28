@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion Modules</title>
+    <style>
+        body {
+            font-family: Arial;
+            background-color: #f4f6f9;
+            padding: 40px;
+        }
+
+        h2 {
+            color: #2c3e50;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            width: 400px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #3498db;
+            border: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        table {
+            margin-top: 40px;
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+            padding: 10px;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body onload="loadModules()">
+
+<h2>Ajouter Module</h2>
+
+<div class="card">
+
+    Matricule:
+    <input type="text" id="matricule">
+
+    Nom:
+    <input type="text" id="nom">
+
+    Coefficient:
+    <input type="number" id="coefficient">
+
+    Volume Horaire:
+    <input type="number" id="volume">
+
+    Type:
+    <select id="type">
+        <option value="PROFESSIONNEL">PROFESSIONNEL</option>
+        <option value="TRANSVERSAL">TRANSVERSAL</option>
+        <option value="RECHERCHE">RECHERCHE</option>
+    </select>
+
+    Code UE:
+    <input type="number" id="codeUE">
+
+    <button onclick="ajouterModule()">Ajouter</button>
+
+</div>
+
+<h2>Liste des Modules</h2>
+
+<table>
+    <thead>
+    <tr>
+        <th>Matricule</th>
+        <th>Nom</th>
+        <th>Coefficient</th>
+        <th>Volume</th>
+        <th>Type</th>
+        <th>UE</th>
+    </tr>
+    </thead>
+    <tbody id="tableBody">
+    </tbody>
+</table>
+
+<script>
+
+    function ajouterModule() {
+
+        var xml =
+            "<module>" +
+            "<matricule>" + document.getElementById("matricule").value + "</matricule>" +
+            "<nom>" + document.getElementById("nom").value + "</nom>" +
+            "<coefficient>" + document.getElementById("coefficient").value + "</coefficient>" +
+            "<volumeHoraire>" + document.getElementById("volume").value + "</volumeHoraire>" +
+            "<type>" + document.getElementById("type").value + "</type>" +
+            "<uniteEnseignement>" +
+            "<code>" + document.getElementById("codeUE").value + "</code>" +
+            "</uniteEnseignement>" +
+            "</module>";
+
+        var xhr = new XMLHttpRequest();
+
+        xhr.open("POST", "http://localhost:8080/Gestion_UE_Student/rest/module/create", true);
+
+        xhr.setRequestHeader("Content-Type", "application/xml");
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                loadModules();
+            }
+        };
+
+        xhr.send(xml);
+    }
+
+    function loadModules() {
+
+        var xhr = new XMLHttpRequest();
+
+        xhr.open("GET", "http://localhost:8080/Gestion_UE_Student/rest/module/all", true);
+
+        xhr.onreadystatechange = function () {
+
+            if (xhr.readyState === 4 && xhr.status === 200) {
+
+                var xml = xhr.responseXML;
+                var modules = xml.getElementsByTagName("module");
+
+                var table = "";
+
+                for (var i = 0; i < modules.length; i++) {
+
+                    table += "<tr>" +
+                        "<td>" + modules[i].getElementsByTagName("matricule")[0].textContent + "</td>" +
+                        "<td>" + modules[i].getElementsByTagName("nom")[0].textContent + "</td>" +
+                        "<td>" + modules[i].getElementsByTagName("coefficient")[0].textContent + "</td>" +
+                        "<td>" + modules[i].getElementsByTagName("volumeHoraire")[0].textContent + "</td>" +
+                        "<td>" + modules[i].getElementsByTagName("type")[0].textContent + "</td>" +
+                        "<td>" + modules[i].getElementsByTagName("code")[0].textContent + "</td>" +
+                        "</tr>";
+                }
+
+                document.getElementById("tableBody").innerHTML = table;
+            }
+        };
+
+        xhr.send();
+    }
+
+</script>
+
+</body>
+</html>

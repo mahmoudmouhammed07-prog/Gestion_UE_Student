@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion UE</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 40px;
+        }
+
+        h2 {
+            color: #2c3e50;
+        }
+
+        .form-container {
+            background: white;
+            padding: 20px;
+            width: 400px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px;
+            width: 100%;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        table {
+            margin-top: 30px;
+            border-collapse: collapse;
+            width: 100%;
+            background: white;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2>Ajouter Une Unité d'Enseignement</h2>
+
+<div class="form-container">
+    Code:
+    <input type="text" id="code">
+
+    Domaine:
+    <input type="text" id="domaine">
+
+    Responsable:
+    <input type="text" id="responsable">
+
+    Crédits:
+    <input type="text" id="credits">
+
+    Semestre:
+    <input type="text" id="semestre">
+
+    <button onclick="ajouterUE()">Ajouter</button>
+</div>
+
+<h2>Liste des Unités</h2>
+
+<table id="ueTable">
+    <thead>
+    <tr>
+        <th>Code</th>
+        <th>Domaine</th>
+        <th>Responsable</th>
+        <th>Crédits</th>
+        <th>Semestre</th>
+    </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+<script>
+
+    function chargerUE() {
+        fetch("http://localhost:8080/Gestion_UE_Student/rest/UE/all")
+            .then(response => response.text())
+            .then(data => {
+
+                const parser = new DOMParser();
+                const xml = parser.parseFromString(data, "application/xml");
+
+                const unites = xml.getElementsByTagName("uniteEnseignement");
+
+                const tableBody = document.querySelector("#ueTable tbody");
+                tableBody.innerHTML = "";
+
+                for (let i = 0; i < unites.length; i++) {
+
+                    const ue = unites[i];
+
+                    const row = `
+                        <tr>
+                            <td>${ue.getElementsByTagName("code")[0].textContent}</td>
+                            <td>${ue.getElementsByTagName("domaine")[0].textContent}</td>
+                            <td>${ue.getElementsByTagName("responsable")[0].textContent}</td>
+                            <td>${ue.getElementsByTagName("credits")[0].textContent}</td>
+                            <td>${ue.getElementsByTagName("semestre")[0].textContent}</td>
+                        </tr>
+                    `;
+
+                    tableBody.innerHTML += row;
+                }
+            });
+    }
+
+    function ajouterUE() {
+
+        var xml =
+            "<uniteEnseignement>" +
+            "<code>" + document.getElementById("code").value + "</code>" +
+            "<domaine>" + document.getElementById("domaine").value + "</domaine>" +
+            "<responsable>" + document.getElementById("responsable").value + "</responsable>" +
+            "<credits>" + document.getElementById("credits").value + "</credits>" +
+            "<semestre>" + document.getElementById("semestre").value + "</semestre>" +
+            "</uniteEnseignement>";
+
+        fetch("http://localhost:8080/Gestion_UE_Student/rest/UE/create", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/xml"
+            },
+            body: xml
+        }).then(response => {
+            if (response.status === 201) {
+                chargerUE();
+            }
+        });
+    }
+
+    // Charger la liste au démarrage
+    window.onload = chargerUE;
+
+</script>
+
+</body>
+</html>
